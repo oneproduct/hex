@@ -16,6 +16,15 @@ data Axial
 makeAxial :: Int -> Int -> Axial
 makeAxial x y = Axial x y $ (-x) - y
 
+axialDelta :: Axial -> Axial -> Axial
+axialDelta (Axial x1 y1 z1) (Axial x2 y2 z2) = Axial (x1-x2) (y1-y2) (z1-z2)
+
+axialToList :: Axial -> [Int]
+axialToList a = [x a, y a, z a]
+
+axialMaxValue :: Axial -> Int
+axialMaxValue = maximum . map abs . axialToList
+
 data Hex
 	=	Hex
 		{
@@ -59,7 +68,7 @@ data HexShape
 type Size = Int
 makeHexGrid :: HexShape -> Size -> HexGrid
 makeHexGrid s n = HexGrid s n $ case s of
-	Hexagonal -> [Hex (makeAxial x y) | x <- [-limit..limit], y <- [(max (-limit) ((-limit) + x))..(min limit (limit - x))]]
+	Hexagonal -> [Hex (makeAxial x y) | x <- [-limit..limit], y <- [(max ((-limit) - x) (-limit))..(min limit (limit - x))]]
 	Triangular -> [Hex (makeAxial x y) | x <- [0..limit], y <- [0..limit - x]]
 	Rhomboidal -> [Hex (makeAxial x y) | x <- [0..limit], y <- [0..limit]]
 	where limit = n - 1
@@ -67,17 +76,39 @@ makeHexGrid s n = HexGrid s n $ case s of
 getHexDistance :: Hex -> Hex -> Int
 getHexDistance h1 h2 = maximum $ map abs [dx, dy, dz]
 	where
-		a1 = pos h1
-		a2 = pos h2
-		x1 = x a1
-		x2 = x a2
-		dx = x1 - x2
-		y1 = y a1
-		y2 = y a2
-		dy = y1 - y2
-		z1 = z a1
-		z2 = z a2
-		dz = z1 - z2
+		a = axialDelta (pos h1) (pos h2)
+		dx = x a
+		dy = y a
+		dz = z a
 
 areHexesAdjacent :: Hex -> Hex -> Bool
 areHexesAdjacent a b = getHexDistance a b == 1
+
+type Ring = Int
+getHexesOnRing :: HexShape -> Ring -> Int
+getHexesOnRing Hexagonal 1 = 1
+getHexesOnRing s r = perimeter
+	where
+		sideLength = case s of
+			Hexagonal -> r
+			Triangular -> 3*r-1
+			Rhomboidal -> 2*r
+		numSides = case s of
+			Hexagonal -> 6
+			Triangular -> 3
+			Rhomboidal -> 4
+		sharedCorners = numSides
+		perimeter = sideLength * numSides - sharedCorners
+		
+getHexesInHexShape :: HexShape -> Size -> Int
+getHexesInHexShape s n = case s of
+	Hexagonal -> 6 * sumOfFirstNumbers n + 1
+	Triangular -> sumOfFirstNumbers n
+	Rhomboidal -> n*n
+	
+sumOfFirstNumbers :: Int -> Int
+sumOfFirstNumbers n = n*(n+1) `div` 2
+
+
+axialToOffset :: Axial -> (Int, Int)
+axialToOffset (Axial x y z) = (x + (z - ((z `rem` 2)) `div` 2), z)
