@@ -1,29 +1,6 @@
-import Data.Array
+module Hex where
 
-data Axial
-	=	Axial
-		{
-			x :: Int
-			, y :: Int
-			, z ::Int
-		}
-	deriving
-	(
-		Show
-		, Eq
-	)
-
-makeAxial :: Int -> Int -> Axial
-makeAxial x y = Axial x y $ (-x) - y
-
-axialDelta :: Axial -> Axial -> Axial
-axialDelta (Axial x1 y1 z1) (Axial x2 y2 z2) = Axial (x1-x2) (y1-y2) (z1-z2)
-
-axialToList :: Axial -> [Int]
-axialToList a = [x a, y a, z a]
-
-axialMaxValue :: Axial -> Int
-axialMaxValue = maximum . map abs . axialToList
+import Axial
 
 data Hex
 	=	Hex
@@ -35,12 +12,6 @@ data Hex
 		Show
 		, Eq
 	)
-
-data HexGridIndex
-	=	HexGridIndex
-		{
-			derp :: Array Int Int
-		}
 
 data HexGrid
 	=	HexGrid
@@ -108,7 +79,3 @@ getHexesInHexShape s n = case s of
 	
 sumOfFirstNumbers :: Int -> Int
 sumOfFirstNumbers n = n*(n+1) `div` 2
-
-
-axialToOffset :: Axial -> (Int, Int)
-axialToOffset (Axial x y z) = (x + (z - ((z `rem` 2)) `div` 2), z)
